@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Counter</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f5;
+      color: #111827;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: #f3f4f6;
+      padding: 6px;
+      border-radius: 16px;
+    }
+
+    .tab-btn {
+      padding: 13px 16px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      color: #374151;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: #111827;
+      color: #ffffff;
+    }
+
+    .add-area {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      flex: 1;
+      padding: 13px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #111827;
+    }
+
+    .add-btn {
+      padding: 13px 18px;
+      border: none;
+      border-radius: 12px;
+      background: #111827;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .counter-card {
+      position: relative;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .count-btn {
+      width: 100%;
+      padding: 16px 10px;
+      border: none;
+      border-radius: 12px;
+      background: #2563eb;
+      color: white;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: capitalize;
+    }
+
+    .count-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .delete-btn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 9px;
+      border: none;
+      border-radius: 10px;
+      background: #ef4444;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .delete-btn:hover {
+      background: #dc2626;
+    }
+
+    .result-section {
+      border-top: 1px solid #e5e7eb;
+      padding-top: 20px;
+    }
+
+    .result-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .result-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      column-gap: 16px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 16px;
+    }
+
+    .result-name {
+      text-transform: capitalize;
+      font-weight: 600;
+    }
+
+    .result-value {
+      font-weight: 800;
+      color: #2563eb;
+    }
+
+    .empty {
+      color: #6b7280;
+      text-align: center;
+      padding: 20px;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 14px;
+      }
+
+      .container {
+        padding: 18px;
+      }
+
+      .add-area {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="pageTitle">AI Counter</h1>
+
+    <div class="tabs">
+      <button id="aiCounterTab" class="tab-btn active" onclick="switchTab('aiCounter')">AI Counter</button>
+      <button id="aiCheckerTab" class="tab-btn" onclick="switchTab('aiChecker')">AI Checker</button>
+    </div>
+
+    <div class="add-area">
+      <input id="newNameInput" type="text" placeholder="输入新名字，例如：alex" />
+      <button class="add-btn" onclick="addCounter()">Add Button</button>
+    </div>
+
+    <div id="buttonsGrid" class="buttons-grid"></div>
+
+    <div class="result-section">
+      <div id="resultTitle" class="result-title">AI Counter Value</div>
+      <div id="resultList" class="result-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const baseNames = [
+      'lucas',
+      'gavin',
+      'jack',
+      'gc',
+      'jun',
+      'ken',
+      'justin',
+      'brayson'
+    ];
+
+    const checkerExtraNames = [
+      'alan',
+      'bryan',
+      'hao',
+      'maverick',
+      'jay'
+    ];
+
+    let activeTab = 'aiCounter';
+
+    const tabData = {
+      aiCounter: baseNames.map(name => ({
+        name: name,
+        value: 0
+      })),
+      aiChecker: [...baseNames, ...checkerExtraNames].map(name => ({
+        name: name,
+        value: 0
+      }))
+    };
+
+    function getCurrentCounters() {
+      return tabData[activeTab];
+    }
+
+    function switchTab(tabName) {
+      activeTab = tabName;
+
+      document.getElementById('aiCounterTab').classList.toggle('active', activeTab === 'aiCounter');
+      document.getElementById('aiCheckerTab').classList.toggle('active', activeTab === 'aiChecker');
+
+      document.getElementById('pageTitle').textContent = activeTab === 'aiCounter' ? 'AI Counter' : 'AI Checker';
+      document.getElementById('resultTitle').textContent = activeTab === 'aiCounter' ? 'AI Counter Value' : 'AI Checker Value';
+      document.getElementById('newNameInput').value = '';
+
+      render();
+    }
+
+    function render() {
+      const counters = getCurrentCounters();
+      const buttonsGrid = document.getElementById('buttonsGrid');
+      const resultList = document.getElementById('resultList');
+
+      buttonsGrid.innerHTML = '';
+      resultList.innerHTML = '';
+
+      if (counters.length === 0) {
+        buttonsGrid.innerHTML = '<div class="empty">没有按钮了，请添加新的 button。</div>';
+        resultList.innerHTML = '<div class="empty">暂无 value。</div>';
+        return;
+      }
+
+      counters.forEach((counter, index) => {
+        const card = document.createElement('div');
+        card.className = 'counter-card';
+
+        const countButton = document.createElement('button');
+        countButton.className = 'count-btn';
+        countButton.textContent = counter.name;
+        countButton.onclick = () => increaseCounter(index);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'delete-btn';
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = () => deleteCounter(index);
+
+        card.appendChild(countButton);
+        card.appendChild(deleteButton);
+        buttonsGrid.appendChild(card);
+
+        const resultItem = document.createElement('div');
+        resultItem.className = 'result-item';
+        resultItem.innerHTML = `
+          <span class="result-name">${counter.name}</span>
+          <span class="result-value">${counter.value}</span>
+        `;
+        resultList.appendChild(resultItem);
+      });
+    }
+
+    function increaseCounter(index) {
+      const counters = getCurrentCounters();
+      counters[index].value += 1;
+      render();
+    }
+
+    function deleteCounter(index) {
+      const counters = getCurrentCounters();
+      counters.splice(index, 1);
+      render();
+    }
+
+    function addCounter() {
+      const counters = getCurrentCounters();
+      const input = document.getElementById('newNameInput');
+      const name = input.value.trim().toLowerCase();
+
+      if (name === '') {
+        alert('请输入名字');
+        return;
+      }
+
+      const alreadyExists = counters.some(counter => counter.name.toLowerCase() === name);
+      if (alreadyExists) {
+        alert('这个 button 已经存在');
+        return;
+      }
+
+      counters.push({
+        name: name,
+        value: 0
+      });
+
+      input.value = '';
+      render();
+    }
+
+    document.getElementById('newNameInput').addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        addCounter();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
